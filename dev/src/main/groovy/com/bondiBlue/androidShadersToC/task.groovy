@@ -18,37 +18,37 @@ class Task extends DefaultTask {
 
 	@OutputDirectory def File outputDir
 
-	@Input def String filesNameConv
+	@Input def String fileNameConv
 
 	@Input def boolean openBracketSameLine
 	@Input def String structPrefix
 	@Input def String structSuffix
 	@Input def String structNameConv
 
-	@Input def String varsNameConv
-	@Input def String staticVarsPrefix
-	@Input def String staticVarsSuffix
-	@Input def String staticVarsNameConv
+	@Input def String varNameConv
+	@Input def String staticVarPrefix
+	@Input def String staticVarSuffix
+	@Input def String staticVarNameConv
 
-	@Input def String packetNamePrefix
-	@Input def String packetNameSuffix
+	@Input def String packetPrefix
+	@Input def String packetSuffix
 
 	@Input def boolean shaderAddFlavourToVarName
 
-	@Input def String functionsNameConv
-	@Input def String functionNewPrefix
-	@Input def String functionNewSuffix
-	@Input def String functionDeletePrefix
-	@Input def String functionDeleteSuffix
+	@Input def String funcNameConv
+	@Input def String funcNewPrefix
+	@Input def String funcNewSuffix
+	@Input def String funcDeletePrefix
+	@Input def String functDeleteSuffix
 	@Input def String templateDir
 	@Input def boolean writeTemplates
 
 	NameConvFormat		macroNCF
-	NameConvFormat		filesNCF
+	NameConvFormat		fileNCF
 	NameConvFormat		structNCF
-	NameConvFormat		varsNCF
-	NameConvFormat		staticVarsNCF
-	NameConvFormat		functionsNCF
+	NameConvFormat		varNCF
+	NameConvFormat		staticVarNCF
+	NameConvFormat		funcNCF
 
 	@Input def String wc
 	@Input def String wh
@@ -186,7 +186,7 @@ class Task extends DefaultTask {
 			def fileExt = name.substring (name.lastIndexOf('.') + 1).toLowerCase ()
 			packet.shaderNames.add (fileName)
 			packet.shaderExts.add  (fileExt)
-			packet.shaderVarNames.add (NameConv.format (staticVarsPrefix, fileName+'_'+fileExt, staticVarsSuffix, staticVarsNCF))
+			packet.shaderVarNames.add (NameConv.format (staticVarPrefix, fileName+'_'+fileExt, staticVarSuffix, staticVarNCF))
 		}
 
 		for (int i = 0; i < names.size(); ++i) {
@@ -202,20 +202,20 @@ class Task extends DefaultTask {
 
 	void genPacketNames (Packet packet) {
 		packet.name = packet.fileName.substring(0, packet.fileName.lastIndexOf('.'))
-		def composedPacketName = packetNamePrefix + '_' + packet.name + '_' + packetNameSuffix
-		def fileName = NameConv.format (composedPacketName, filesNCF)
+		def composedPacketName = packetPrefix + '_' + packet.name + '_' + packetSuffix
+		def fileName = NameConv.format (composedPacketName, fileNCF)
 		packet.cFileName = fileName + '.' + wc
 		packet.hFileName = fileName + '.' + wh
 		packet.hMacro = NameConv.format ('', fileName, wh, macroNCF)
 
 		packet.structName = NameConv.format (structPrefix, composedPacketName, structSuffix, structNCF)
-		packet.functionNew = NameConv.format (functionNewPrefix, composedPacketName, functionNewSuffix, functionsNCF)
-		packet.functionDelete = NameConv.format (functionDeletePrefix, composedPacketName, functionDeleteSuffix, functionsNCF)
+		packet.functionNew = NameConv.format (funcNewPrefix, composedPacketName, funcNewSuffix, funcNCF)
+		packet.functionDelete = NameConv.format (funcDeletePrefix, composedPacketName, functDeleteSuffix, funcNCF)
 
 
 		for (def shader : packet.shaders) {
 			shader.structName	= NameConv.format (structPrefix, packet.name + '_' + shader.name, structSuffix, structNCF)
-			shader.varName = NameConv.format (shader.name, varsNCF)
+			shader.varName = NameConv.format (shader.name, varNCF)
 			shader.linkNames = new ArrayList<String> ()
 			shader.linkFlavours = new ArrayList<String> ()
 			shader.linkVarNames = new ArrayList<String> ()
@@ -243,7 +243,7 @@ class Task extends DefaultTask {
 					if (!found) {
 						shader.linkNames.add (name)
 						shader.linkFlavours.add (flavour)
-						shader.linkVarNames.add (NameConv.format (shaderAddFlavourToVarName ? flavour : '', name, '', varsNCF))
+						shader.linkVarNames.add (NameConv.format (shaderAddFlavourToVarName ? flavour : '', name, '', varNCF))
 					}
 				}
 			}
@@ -271,7 +271,7 @@ class Task extends DefaultTask {
 					if (!found) {
 						shader.linkNames.add (name)
 						shader.linkFlavours.add (flavour)
-						shader.linkVarNames.add (NameConv.format (shaderAddFlavourToVarName ? flavour : '', name, '', varsNCF))
+						shader.linkVarNames.add (NameConv.format (shaderAddFlavourToVarName ? flavour : '', name, '', varNCF))
 					}
 				}
 			}
@@ -458,7 +458,7 @@ class Task extends DefaultTask {
 		println 'X ' + inputFileName
 
 		def packetName = inputFileName.substring(0, inputFileName.lastIndexOf('.'))
-		def fileName = NameConv.format (packetName, filesNCF)
+		def fileName = NameConv.format (packetName, fileNCF)
 		def cFileName = fileName + '.' + wc
 		def hFileName = fileName + '.' + wh
 		println 'x\t' + inputFileName + ' -> ' + cFileName
@@ -471,14 +471,14 @@ class Task extends DefaultTask {
 	void execute (IncrementalTaskInputs inputs) {
 		templates		= genTemplates (templateDir, writeTemplates)
 
-		filesNCF = NameConv.getFormat (filesNameConv)
+		fileNCF = NameConv.getFormat (fileNameConv)
 		structNCF = NameConv.getFormat (structNameConv)
-		varsNCF = NameConv.getFormat (varsNameConv)
-		staticVarsNCF = NameConv.getFormat (staticVarsNameConv)
-		functionsNCF = NameConv.getFormat (functionsNameConv)
-		formatedProgram = NameConv.format (wprogram, varsNCF)
-		formatedShaders = NameConv.format (wshaders, varsNCF)
-		formatedPacket = NameConv.format (wpacket, varsNCF)
+		varNCF = NameConv.getFormat (varNameConv)
+		staticVarNCF = NameConv.getFormat (staticVarNameConv)
+		funcNCF = NameConv.getFormat (funcNameConv)
+		formatedProgram = NameConv.format (wprogram, varNCF)
+		formatedShaders = NameConv.format (wshaders, varNCF)
+		formatedPacket = NameConv.format (wpacket, varNCF)
 
 		def packets = new ArrayList<Packet> ()
 		inputDir.eachFileRecurse (FILES) {
