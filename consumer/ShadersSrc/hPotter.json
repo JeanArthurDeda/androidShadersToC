@@ -1,0 +1,7 @@
+[
+	{
+		"name" : "convolution",
+		"vertexShader" : "prelit.vs",
+		"fragmentShader" : "prelit.fs"
+	}
+]

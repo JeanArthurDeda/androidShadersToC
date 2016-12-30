@@ -1,0 +1,12 @@
+[
+	{
+		"name" : "gouraud",
+		"vertexShader" : "prelit.vs",
+		"fragmentShader" : "prelit.fs"
+	},
+	{
+		"name" : "tex",
+		"vertexShader" : "prelit.vs",
+		"fragmentShader" : "prelit.fs"
+	}
+]

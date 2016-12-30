@@ -1,0 +1,6 @@
+apply plugin: 'com.bondiBlue.androidShadersToC'
+
+shadersConf {
+	inputDir = new File('ShadersSrc')
+	outputDir = new File('ShadersOut')
+}

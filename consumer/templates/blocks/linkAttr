@@ -1,0 +1,1 @@
+packet->shaderVarName.linkVarName = glGetAttribLocation (packet->shaderVarName.program, "linkName");
