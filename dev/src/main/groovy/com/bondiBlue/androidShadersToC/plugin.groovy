@@ -8,9 +8,9 @@ class Plugin implements Plugin<Project> {
 	void apply(Project project) {
 		project.extensions.create("shadersConf", TaskInput)
 
-		project.task('shadersBuild', type: Task) {
-			description 'Generates C code with embedded androids shaders.'
-			doFirst{
+		project.afterEvaluate {
+			project.task('shadersBuild', type: Task) {
+				description 'Generates C code with embedded androids shaders.'
 				inputDir = project.shadersConf.inputDir
 				outputDir = project.shadersConf.outputDir
 				filesNameConv = project.shadersConf.filesNameConv
@@ -35,11 +35,11 @@ class Plugin implements Plugin<Project> {
 				wGLint = project.shadersConf.wGLint
 				wGLuint = project.shadersConf.wGLuint
 			}
-		}
-		project.task('shadersClean') {
-			description 'Deletes the generated C code for android shaders.'
-			doFirst{
-				project.delete (project.shadersConf.outputDir.listFiles ());
+			project.task('shadersClean') {
+				description 'Deletes the generated C code for android shaders.'
+				doFirst{
+					project.delete (project.shadersConf.outputDir.listFiles ());
+				}
 			}
 		}
 	}

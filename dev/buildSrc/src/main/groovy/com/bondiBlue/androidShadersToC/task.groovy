@@ -8,63 +8,38 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.api.GradleException
 
 
 class Task extends DefaultTask {
-	static String inputDirHack = 'gradle'
-	static String outputDirHack = 'non_existing_file'
+	@InputDirectory def File inputDir
 
-	@InputDirectory
-	@SkipWhenEmpty
-	def File inputDir = new File (inputDirHack)
+	@OutputDirectory def File outputDir
 
-	@OutputDirectory
-	@SkipWhenEmpty
-	def File outputDir = new File (outputDirHack)
+	@Input def String filesNameConv = 'lowerCamelCase'
 
-	@Input
-	def String		 	filesNameConv = 'lowerCamelCase'
+	@Input def boolean openBracketSameLine = false
+	@Input def String structPrefix = 't'
+	@Input def String structSuffix = ''
+	@Input def String structNameConv = 'lowerCamelCase'
 
-	@Input
-	def boolean			openBracketSameLine = false
-	@Input
-	def String 			structPrefix = 't'
-	@Input
-	def String 			structSuffix = ''
-	@Input
-	def String		 	structNameConv = 'lowerCamelCase'
+	@Input def String varsNameConv = 'lowerCamelCase'
+	@Input def String staticVarsPrefix = ''
+	@Input def String staticVarsSuffix = 's'
+	@Input def String staticVarsNameConv = 'goOutAnd_PLAY'
 
-	@Input
-	def String			varsNameConv = 'lowerCamelCase'
-	@Input
-	def String			staticVarsPrefix = ''
-	@Input
-	def String			staticVarsSuffix = 's'
-	@Input
-	def String			staticVarsNameConv = 'goOutAnd_PLAY'
+	@Input def String packetNamePrefix = ''
+	@Input def String packetNameSuffix = 'shaders'
 
-	@Input
-	def String			packetNamePrefix = ''
-	@Input
-	def String			packetNameSuffix = 'shaders'
+	@Input def boolean shaderAddFlavourToVarName = true
 
-	@Input
-	def boolean			shaderAddFlavourToVarName = true
-
-	@Input
-	def String			functionsNameConv = 'lowerCamelCase'
-	@Input
-	def String			functionNewPrefix = ''
-	@Input
-	def String			functionNewSuffix = 'new'
-	@Input
-	def String			functionDeletePrefix = ''
-	@Input
-	def String			functionDeleteSuffix = 'delete'
+	@Input def String functionsNameConv = 'lowerCamelCase'
+	@Input def String functionNewPrefix = ''
+	@Input def String functionNewSuffix = 'new'
+	@Input def String functionDeletePrefix = ''
+	@Input def String functionDeleteSuffix = 'delete'
 
 	NameConvFormat		macroNCF
 	NameConvFormat		filesNCF
@@ -73,14 +48,10 @@ class Task extends DefaultTask {
 	NameConvFormat		staticVarsNCF
 	NameConvFormat		functionsNCF
 
-	@Input
-	String wc	= 'c'
-	@Input
-	String wh	= 'h'
-	@Input
-	String wGLint = 'GLint'
-	@Input
-	String wGLuint = 'GLuint'
+	@Input def String wc	= 'c'
+	@Input def String wh	= 'h'
+	@Input def String wGLint = 'GLint'
+	@Input def String wGLuint = 'GLuint'
 
 	String wprogram = 'program'
 	String wshaders = 'shaders'
@@ -444,17 +415,6 @@ class Task extends DefaultTask {
 
 	@TaskAction
 	void execute (IncrementalTaskInputs inputs) {
-
-		if (inputDir.name == inputDirHack || outputDir.name == outputDirHack) {
-			println 'Consider adding'
-			println 'shadersConf {'
-			println '  inputDir = new File ("..DirectorySrc..")'
-			println '  outputDir = new File ("..DirectoryOut..")'
-			println '}'
-			println 'to your build.gradle file'
-			throw new GradleException('inputDir and/or outputDir were not initialized. A snippet of initialiation is shown just a few lines above this one.')
-		}
-
 		filesNCF = NameConv.getFormat (filesNameConv)
 		structNCF = NameConv.getFormat (structNameConv)
 		varsNCF = NameConv.getFormat (varsNameConv)
@@ -485,23 +445,26 @@ class Task extends DefaultTask {
 		}
 
 		for (def packet : packets){
-			for (def change : changes){
-				if (packet.fileName == change.name) {
-					println 'm ' + change.name
-					packet.dirty = true
-					break
-				}
-				for (def shader : packet.shaders){
-					if (shader.vertexShader == change.name || shader.fragmentShader == change.name)
-					{
+			if (!inputs.incremental){
+				packet.dirty = true
+			} else
+				for (def change : changes){
+					if (packet.fileName == change.name) {
+						println 'm ' + change.name
 						packet.dirty = true
 						break
 					}
+					for (def shader : packet.shaders){
+						if (shader.vertexShader == change.name || shader.fragmentShader == change.name)
+						{
+							packet.dirty = true
+							break
+						}
+					}
+					if (packet.dirty){
+						break
+					}
 				}
-				if (packet.dirty){
-					break
-				}
-			}
 			if (packet.dirty)
 				genPacket (packet)
 		}
