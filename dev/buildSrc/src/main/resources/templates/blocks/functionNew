@@ -1,0 +1,95 @@
+static GLuint LoadShader(const char *shaderSrc, GLenum type)
+{
+	GLuint shader;
+	GLint compiled;
+
+	// Create the shader object
+	shader = glCreateShader(type);
+	if(shader == 0)
+		return 0;
+	// Load the shader source
+	glShaderSource(shader, 1, &shaderSrc, NULL);
+
+	// Compile the shader
+	glCompileShader(shader);
+	// Check the compile status
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+	if(0 == compiled)
+	{
+		GLint infoLen = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+
+		if(infoLen > 1)
+		{
+			char* infoLog = malloc(sizeof(char) * infoLen);
+			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+			esLogMessage("Error compiling shader:\n%s\n", infoLog);
+			free(infoLog);
+		}
+		glDeleteShader(shader);
+		return 0;
+	}
+	return shader;
+}
+
+static GLuint LoadProgram (GLuint vsShader, GLuint fsShader)
+{
+	GLuint program;
+	GLint linked;
+	program = glCreateProgram ();
+	if (!program)
+		return program;
+
+	glAttachShader (program, vsShader);
+	glAttachShader (program, fsShader);
+
+	glLinkProgram (program);
+
+	glGetProgramiv(programObject, GL_LINK_STATUS, &linked);
+	if(0 == linked)
+	{
+		GLint infoLen = 0;
+		glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &infoLen);
+
+		if(infoLen > 1)
+		{
+			char* infoLog = malloc(sizeof(char) * infoLen);
+			glGetProgramInfoLog(programObject, infoLen, NULL, infoLog);
+			esLogMessage("Error linking program:\n%s\n", infoLog);
+
+			free(infoLog);
+		}
+		glDeleteProgram(programObject);
+		return 0;
+	}
+
+}
+
+packetStruct const * functionNew ()
+{
+	int i;
+
+	packetStruct * packet = (packetStruct*)calloc (sizeof (packetStruct), 1);
+	if (NULL == packet)
+		return packet;
+
+	char const * const shaderSrcs[] =
+	{
+		listSrcs
+	};
+
+	GLuint shaderTypes[] =
+	{
+		listTypes
+	};
+
+	for (i = 0; i < sizeof (shadersSrcs)/sizeof(shadersSrcs[0]); ++i)
+	{
+		packet->shaders[i] = LoadShader (shaderSrcs[i], shaderTypes[i]);
+		if (0 == packet->shaders[i])
+			return NULL;
+	}
+	fillShaders
+
+	return packet;
+}

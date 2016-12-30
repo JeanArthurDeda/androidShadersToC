@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "gradle.plugin.com.bondiBlue.androidShadersToC:androidShadersToC:0.2"
+    classpath "gradle.plugin.com.bondiBlue.androidShadersToC:androidShadersToC:0.3"
   }
 }
 
@@ -15,4 +15,3 @@ shadersConf {
 	inputDir = new File('ShadersSrc')
 	outputDir = new File('ShadersOut')
 }
-

@@ -1,0 +1,10 @@
+void functionDelete (packetStruct * packet)
+{
+	int i;
+
+	for (i = 0; i < sizeof (packet->shaders)/sizeof(packet->shaders[0]); ++i)
+		glDeleteShaders (packet->shaders[i]);
+	deletePrograms
+
+	free (packet);
+}

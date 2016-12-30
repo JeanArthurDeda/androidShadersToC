@@ -1,6 +1,0 @@
-
-packet->shaderVarName.program	= LoadProgram (packet->shaders[vsIndex], packet->shaders[fsIndex]);
-if (0 == packet->shaderVarName.program)
-	return NULL;
-linkAttrs
-linkUniforms

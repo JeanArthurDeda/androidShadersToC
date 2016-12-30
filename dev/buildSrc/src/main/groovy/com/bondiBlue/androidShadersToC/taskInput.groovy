@@ -25,4 +25,6 @@ class TaskInput {
 	String wh	= 'h'
 	String wGLint = 'GLint'
 	String wGLuint = 'GLuint'
+	boolean writeTemplates = false
+	String templateDir = 'templates'
 }

@@ -18,28 +18,30 @@ class Task extends DefaultTask {
 
 	@OutputDirectory def File outputDir
 
-	@Input def String filesNameConv = 'lowerCamelCase'
+	@Input def String filesNameConv
 
-	@Input def boolean openBracketSameLine = false
-	@Input def String structPrefix = 't'
-	@Input def String structSuffix = ''
-	@Input def String structNameConv = 'lowerCamelCase'
+	@Input def boolean openBracketSameLine
+	@Input def String structPrefix
+	@Input def String structSuffix
+	@Input def String structNameConv
 
-	@Input def String varsNameConv = 'lowerCamelCase'
-	@Input def String staticVarsPrefix = ''
-	@Input def String staticVarsSuffix = 's'
-	@Input def String staticVarsNameConv = 'goOutAnd_PLAY'
+	@Input def String varsNameConv
+	@Input def String staticVarsPrefix
+	@Input def String staticVarsSuffix
+	@Input def String staticVarsNameConv
 
-	@Input def String packetNamePrefix = ''
-	@Input def String packetNameSuffix = 'shaders'
+	@Input def String packetNamePrefix
+	@Input def String packetNameSuffix
 
-	@Input def boolean shaderAddFlavourToVarName = true
+	@Input def boolean shaderAddFlavourToVarName
 
-	@Input def String functionsNameConv = 'lowerCamelCase'
-	@Input def String functionNewPrefix = ''
-	@Input def String functionNewSuffix = 'new'
-	@Input def String functionDeletePrefix = ''
-	@Input def String functionDeleteSuffix = 'delete'
+	@Input def String functionsNameConv
+	@Input def String functionNewPrefix
+	@Input def String functionNewSuffix
+	@Input def String functionDeletePrefix
+	@Input def String functionDeleteSuffix
+	@Input def String templateDir
+	@Input def boolean writeTemplates
 
 	NameConvFormat		macroNCF
 	NameConvFormat		filesNCF
@@ -48,10 +50,10 @@ class Task extends DefaultTask {
 	NameConvFormat		staticVarsNCF
 	NameConvFormat		functionsNCF
 
-	@Input def String wc	= 'c'
-	@Input def String wh	= 'h'
-	@Input def String wGLint = 'GLint'
-	@Input def String wGLuint = 'GLuint'
+	@Input def String wc
+	@Input def String wh
+	@Input def String wGLint
+	@Input def String wGLuint
 
 	String wprogram = 'program'
 	String wshaders = 'shaders'
@@ -66,13 +68,50 @@ class Task extends DefaultTask {
 	String formatedPacket = ''
 	Map templates
 
-	Map mapFolder (File folder){
-		def map = [:]
-		def files =folder.listFiles()
-		for (def file : files){
-			map[file.name] = file.isDirectory() ? mapFolder (file) : file
-			// println 'map ' + file.path + ' to ' + file.path.replace ('\\', '.')
+	void addTemplate (Map map, String name, String templateDir, boolean writeTemplates){
+		def resourceName = '/templates/'+name
+		def fileName = templateDir + '/' + name
+		def words = name.split ('/')
+		def it = map
+		def i = words.length - 1
+		for (def word : words){
+				if (0 == i){
+					def file = new File (fileName)
+					if (writeTemplates || !file.exists ()){
+						it[word] = getClass ().getResourceAsStream(resourceName).getText()
+						if (writeTemplates){
+							def fullPathFileName = file.getAbsolutePath ()
+							println "Writing template file: ${fullPathFileName}"
+							file.getParentFile().mkdirs();
+							file.text = it[word]
+						}
+					}	else
+						it[word] = file.text
+				}else{
+					if (it[word] == null)
+						it[word] = [:]
+					it = it[word]
+				}
+			i --;
 		}
+	}
+
+	Map genTemplates (String templateDir, boolean writeTemplates){
+		Map map = [:]
+		addTemplate (map, 'cfile', templateDir, writeTemplates)
+		addTemplate (map, 'header', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/enumItem', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/fillShader', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/functionNew', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/functionDelete', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/deleteProgram', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/hlineblock', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/include', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/linkAttr', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/linkUniform', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/staticVarDef', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/struct', templateDir, writeTemplates)
+		addTemplate (map, 'blocks/varDecl', templateDir, writeTemplates)
 		return map;
 	}
 
@@ -243,35 +282,35 @@ class Task extends DefaultTask {
 		println 'u\t' + packet.fileName + ' -> ' + packet.cFileName
 		def file = new File (outputDir, packet.cFileName)
 
-		def cfile = new Buffer (templates.cfile.text)
+		def cfile = new Buffer (templates.cfile)
 
-		def include = new Buffer (templates.blocks.include.text)
+		def include = new Buffer (templates.blocks.include)
 		include.replace ('name', packet.hFileName)
 		cfile.replace ('include', include)
 
 		def blocks = new Buffer()
 
 		for (int i = 0; i < packet.shaderFiles.size (); ++i) {
-			def staticVarDef = new Buffer (templates.blocks.staticVarDef.text)
+			def staticVarDef = new Buffer (templates.blocks.staticVarDef)
 			def name = packet.shaderVarNames[i]
 			def value = packet.shaderFiles[i]
 			staticVarDef.replace('type', 'char const * const')
 			staticVarDef.replace('name', name)
 			staticVarDef.replace('value', '"'+value.text+'"')
 
-			def block = new Buffer (templates.blocks.hlineblock.text)
+			def block = new Buffer (templates.blocks.hlineblock)
 			block.replace ('block', staticVarDef)
 			blocks.add (block)
 		}
 
-		def block = new Buffer (templates.blocks.hlineblock.text)
-		def functionNew = new Buffer (templates.blocks.functionNew.text)
+		def block = new Buffer (templates.blocks.hlineblock)
+		def functionNew = new Buffer (templates.blocks.functionNew)
 		functionNew.replace ('packetStruct', packet.structName)
 		functionNew.replace ('functionNew', packet.functionNew)
 
 		def listSrcs = new Buffer ()
 		for (def name : packet.shaderVarNames){
-			def enumItem = new Buffer (templates.blocks.enumItem.text)
+			def enumItem = new Buffer (templates.blocks.enumItem)
 			enumItem.replace ('item', name)
 			listSrcs.add (enumItem)
 		}
@@ -279,7 +318,7 @@ class Task extends DefaultTask {
 
 		def listTypes = new Buffer ()
 		for (def isVS : packet.shaderIsVS){
-			def enumItem = new Buffer (templates.blocks.enumItem.text)
+			def enumItem = new Buffer (templates.blocks.enumItem)
 			enumItem.replace ('item', isVS ? wGL_VERTEX_SHADER : wGL_FRAGMENT_SHADER)
 			listTypes.add (enumItem)
 		}
@@ -288,7 +327,7 @@ class Task extends DefaultTask {
 		def fillShaders = new Buffer ()
 		int i = 0
 		for (def shader : packet.shaders){
-			def fillShader = new Buffer (templates.blocks.fillShader.text)
+			def fillShader = new Buffer (templates.blocks.fillShader)
 			fillShader.replace ('vsIndex', (String)shader.vsIndex)
 			fillShader.replace ('fsIndex', (String)shader.fsIndex)
 			def linkAttrs = new Buffer ()
@@ -296,13 +335,13 @@ class Task extends DefaultTask {
 			int j = 0
 			for (def linkName : shader.linkNames) {
 				if (shader.linkFlavours[j] == wattribute){
-					def linkAttr = new Buffer (templates.blocks.linkAttr.text)
+					def linkAttr = new Buffer (templates.blocks.linkAttr)
 					linkAttr.replace ('linkVarName', shader.linkVarNames[j])
 					linkAttr.replace ('linkName', shader.linkNames[j])
 					linkAttrs.add (linkAttr)
 				}
 				else {
-					def linkUniform = new Buffer (templates.blocks.linkUniform.text)
+					def linkUniform = new Buffer (templates.blocks.linkUniform)
 					linkUniform.replace ('linkVarName', shader.linkVarNames[j])
 					linkUniform.replace ('linkName', shader.linkNames[j])
 					linkUniforms.add (linkUniform)
@@ -320,6 +359,21 @@ class Task extends DefaultTask {
 		block.replace ('block', functionNew)
 		blocks.add (block)
 
+		block = new Buffer (templates.blocks.hlineblock)
+		def functionDelete = new Buffer (templates.blocks.functionDelete)
+		functionDelete.replace ('packetStruct', packet.structName)
+		functionDelete.replace ('functionDelete', packet.functionDelete)
+		def deletePrograms = new Buffer()
+		for (def shader : packet.shaders){
+			def deleteProgram = new Buffer (templates.blocks.deleteProgram)
+			deleteProgram.replace ('shaderVarName', shader.varName)
+			deletePrograms.add (deleteProgram)
+		}
+		functionDelete.replace ('deletePrograms', deletePrograms)
+
+		block.replace ('block', functionDelete)
+		blocks.add (block)
+
 		cfile.replace('blocks', blocks)
 
 		cfile.replace (wpacket, formatedPacket)
@@ -332,23 +386,23 @@ class Task extends DefaultTask {
 		println 'u\t' + packet.fileName + ' -> ' + packet.hFileName
 		def file = new File (outputDir, packet.hFileName)
 
-		def header = new Buffer (templates.header.text)
+		def header = new Buffer (templates.header)
 
 		header.replace ('MACRO', packet.hMacro)
 
 		def structs = new Buffer ()
 		for (def shader : packet.shaders){
-			def struct = new Buffer (templates.blocks.struct.text)
+			def struct = new Buffer (templates.blocks.struct)
 			struct.replace ('name', shader.structName)
 
 			def varDecls = new Buffer ()
-			def varDecl = new Buffer (templates.blocks.varDecl.text)
+			def varDecl = new Buffer (templates.blocks.varDecl)
 			varDecl.replace ('type', wGLuint)
 			varDecl.replace ('name', wprogram)
 			varDecls.add (varDecl)
 			for (int i = 0; i < shader.linkNames.size(); ++i){
 				def name = shader.linkVarNames[i]
-				varDecl = new Buffer (templates.blocks.varDecl.text)
+				varDecl = new Buffer (templates.blocks.varDecl)
 				varDecl.replace ('type', wGLint)
 				varDecl.replace ('name', name)
 				varDecls.add (varDecl)
@@ -356,16 +410,16 @@ class Task extends DefaultTask {
 			struct.replace ('varDecls', varDecls)
 			structs.add (struct)
 		}
-		def struct = new Buffer (templates.blocks.struct.text)
+		def struct = new Buffer (templates.blocks.struct)
 		struct.replace ('name', packet.structName)
 		def varDecls = new Buffer ()
 		for (def shader : packet.shaders){
-			def varDecl = new Buffer (templates.blocks.varDecl.text)
+			def varDecl = new Buffer (templates.blocks.varDecl)
 			varDecl.replace ('type', shader.structName)
 			varDecl.replace ('name', shader.varName)
 			varDecls.add (varDecl)
 		}
-		def varDecl = new Buffer (templates.blocks.varDecl.text)
+		def varDecl = new Buffer (templates.blocks.varDecl)
 		varDecl.replace ('type', wGLuint)
 		varDecl.replace ('name', formatedShaders+'['+packet.shaderFiles.size()+']')
 		varDecls.add (varDecl)
@@ -415,6 +469,8 @@ class Task extends DefaultTask {
 
 	@TaskAction
 	void execute (IncrementalTaskInputs inputs) {
+		templates		= genTemplates (templateDir, writeTemplates)
+
 		filesNCF = NameConv.getFormat (filesNameConv)
 		structNCF = NameConv.getFormat (structNameConv)
 		varsNCF = NameConv.getFormat (varsNameConv)
@@ -423,8 +479,6 @@ class Task extends DefaultTask {
 		formatedProgram = NameConv.format (wprogram, varsNCF)
 		formatedShaders = NameConv.format (wshaders, varsNCF)
 		formatedPacket = NameConv.format (wpacket, varsNCF)
-
-		templates = mapFolder (new File ('templates'))
 
 		def packets = new ArrayList<Packet> ()
 		inputDir.eachFileRecurse (FILES) {

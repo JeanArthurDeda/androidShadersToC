@@ -30,6 +30,8 @@ class Plugin implements Plugin<Project> {
 				functionNewSuffix = project.shadersConf.functionNewSuffix
 				functionDeletePrefix = project.shadersConf.functionDeletePrefix
 				functionDeleteSuffix = project.shadersConf.functionDeleteSuffix
+				templateDir = project.shadersConf.templateDir
+				writeTemplates = project.shadersConf.writeTemplates
 				wc = project.shadersConf.wc
 				wh = project.shadersConf.wh
 				wGLint = project.shadersConf.wGLint

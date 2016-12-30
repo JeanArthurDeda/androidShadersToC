@@ -1,0 +1,1 @@
+glDeleteProgram (packet->shaderVarName.program);

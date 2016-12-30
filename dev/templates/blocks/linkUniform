@@ -1,1 +1,0 @@
-packet->shaderVarName.linkVarName = glGetUniformLocation (packet->shaderVarName.program, "linkName")
