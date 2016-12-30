@@ -1,0 +1,8 @@
+/consumer/.gradle
+/dev/.gradle
+/dev/buildSrc/.gradle
+/dev/buildSrc/build
+/publisher/build
+/publisher/.gradle
+/dev/ShadersOut
+/consumer/ShadersOut
